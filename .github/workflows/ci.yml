@@ -37,10 +37,11 @@ jobs:
           python -m pip install --upgrade pip
           pip install mlflow==2.19.0 scikit-learn pandas numpy matplotlib seaborn joblib
 
-      # Step 4: Run MLflow Project menggunakan mlflow run
-      - name: Run MLflow Project
+      # Step 4: Run MLflow Project
+      - name: Run MLflow Training
+        working-directory: MLProject
         run: |
-          mlflow run ./MLProject --env-manager=local -P n_estimators=100 -P max_depth=10 -P test_size=0.2
+          mlflow run . -P n_estimators=100 -P max_depth=10 -P test_size=0.2
 
       # Step 5: Upload Artifacts to GitHub (Skilled)
       - name: Upload MLflow Artifacts
