@@ -72,11 +72,16 @@ def load_and_prepare_data(data_dir: str = 'wine_quality_preprocessing', test_siz
 def train_model(n_estimators: int = 100, max_depth: int = 10, test_size: float = 0.2):
     """Train model dan log ke MLflow."""
 
-    mlflow.set_experiment("wine-quality-ci")
-
     X_train, X_test, y_train, y_test = load_and_prepare_data(test_size=test_size)
 
-    with mlflow.start_run(run_name="ci_random_forest"):
+    run_id = os.environ.get("MLFLOW_RUN_ID")
+    if run_id:
+        active_run = mlflow.start_run(run_id=run_id)
+    else:
+        mlflow.set_experiment("wine-quality-ci")
+        active_run = mlflow.start_run(run_name="ci_random_forest")
+
+    try:
         # Train
         model = RandomForestClassifier(
             n_estimators=n_estimators,
@@ -148,6 +153,8 @@ def train_model(n_estimators: int = 100, max_depth: int = 10, test_size: float =
                 os.remove(f_path)
 
         return model
+    finally:
+        mlflow.end_run()
 
 
 if __name__ == '__main__':
