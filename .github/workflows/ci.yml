@@ -40,8 +40,8 @@ jobs:
       # Step 4: Run MLflow Project
       - name: Run MLflow Training
         working-directory: MLProject
-        run: |
-          mlflow run . --no-conda -P n_estimators=100 -P max_depth=10 -P test_size=0.2
+         run: |
+           mlflow run . -P n_estimators=100 -P max_depth=10 -P test_size=0.2
 
       # Step 5: Upload Artifacts to GitHub (Skilled)
       - name: Upload MLflow Artifacts
