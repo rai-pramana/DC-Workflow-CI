@@ -1,7 +1,7 @@
 """
 MLProject Modelling Script for CI Workflow
 ============================================
-Script untuk melatih model Wine Quality Classification
+Script untuk melatih model Heart Disease Classification
 dalam konteks MLflow Project (CI pipeline).
 
 Author: I Kadek Rai Pramana
@@ -31,7 +31,7 @@ import warnings
 warnings.filterwarnings('ignore')
 
 
-def load_and_prepare_data(data_dir: str = 'wine_quality_preprocessing', test_size: float = 0.2):
+def load_and_prepare_data(data_dir: str = 'heart_disease_preprocessing', test_size: float = 0.2):
     """Load preprocessed data, atau load raw dan preprocess jika perlu."""
 
     train_path = os.path.join(data_dir, 'train.csv')
@@ -40,22 +40,22 @@ def load_and_prepare_data(data_dir: str = 'wine_quality_preprocessing', test_siz
     if os.path.exists(train_path) and os.path.exists(test_path):
         train_df = pd.read_csv(train_path)
         test_df = pd.read_csv(test_path)
-        X_train = train_df.drop('quality_label', axis=1)
-        y_train = train_df['quality_label']
-        X_test = test_df.drop('quality_label', axis=1)
-        y_test = test_df['quality_label']
+        X_train = train_df.drop('heart_disease', axis=1)
+        y_train = train_df['heart_disease']
+        X_test = test_df.drop('heart_disease', axis=1)
+        y_test = test_df['heart_disease']
     else:
-        # Fallback: load raw data
-        raw_path = os.path.join(data_dir, 'wine_quality_raw.csv')
-        if not os.path.exists(raw_path):
-            raw_path = 'wine_quality_raw.csv'
-
-        df = pd.read_csv(raw_path, sep=';')
+        # Fallback: download and preprocess
+        url = 'https://archive.ics.uci.edu/ml/machine-learning-databases/heart-disease/processed.cleveland.data'
+        cols = ['age', 'sex', 'cp', 'trestbps', 'chol', 'fbs', 'restecg',
+                'thalach', 'exang', 'oldpeak', 'slope', 'ca', 'thal', 'target']
+        df = pd.read_csv(url, names=cols, na_values='?')
         df = df.drop_duplicates().dropna()
-        df['quality_label'] = (df['quality'] >= 7).astype(int)
+        df['heart_disease'] = (df['target'] >= 1).astype(int)
+        df = df.drop('target', axis=1)
 
-        X = df.drop(['quality', 'quality_label'], axis=1)
-        y = df['quality_label']
+        X = df.drop('heart_disease', axis=1)
+        y = df['heart_disease']
 
         X_train, X_test, y_train, y_test = train_test_split(
             X, y, test_size=test_size, random_state=42, stratify=y
@@ -72,16 +72,11 @@ def load_and_prepare_data(data_dir: str = 'wine_quality_preprocessing', test_siz
 def train_model(n_estimators: int = 100, max_depth: int = 10, test_size: float = 0.2):
     """Train model dan log ke MLflow."""
 
+    mlflow.set_experiment("heart-disease-ci")
+
     X_train, X_test, y_train, y_test = load_and_prepare_data(test_size=test_size)
 
-    run_id = os.environ.get("MLFLOW_RUN_ID")
-    if run_id:
-        active_run = mlflow.start_run(run_id=run_id)
-    else:
-        mlflow.set_experiment("wine-quality-ci")
-        active_run = mlflow.start_run(run_name="ci_random_forest")
-
-    try:
+    with mlflow.start_run(run_name="ci_random_forest"):
         # Train
         model = RandomForestClassifier(
             n_estimators=n_estimators,
@@ -120,8 +115,8 @@ def train_model(n_estimators: int = 100, max_depth: int = 10, test_size: float =
         cm = confusion_matrix(y_test, predictions)
         plt.figure(figsize=(8, 6))
         sns.heatmap(cm, annot=True, fmt='d', cmap='Blues',
-                    xticklabels=['Not Good', 'Good'],
-                    yticklabels=['Not Good', 'Good'])
+                    xticklabels=['No Disease', 'Has Disease'],
+                    yticklabels=['No Disease', 'Has Disease'])
         plt.title('Confusion Matrix')
         plt.ylabel('Actual')
         plt.xlabel('Predicted')
@@ -153,8 +148,6 @@ def train_model(n_estimators: int = 100, max_depth: int = 10, test_size: float =
                 os.remove(f_path)
 
         return model
-    finally:
-        mlflow.end_run()
 
 
 if __name__ == '__main__':

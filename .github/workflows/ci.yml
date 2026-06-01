@@ -10,53 +10,53 @@
 name: ML Training CI Pipeline
 
 on:
-  push:
-    branches: [master]
-  pull_request:
-    branches: [master]
-  workflow_dispatch:  # Manual trigger
+    push:
+        branches: [master]
+    pull_request:
+        branches: [master]
+    workflow_dispatch: # Manual trigger
 
 jobs:
-  train-model:
-    runs-on: ubuntu-latest
+    train-model:
+        runs-on: ubuntu-latest
 
-    steps:
-      # Step 1: Checkout repository
-      - name: Checkout Repository
-        uses: actions/checkout@v4
+        steps:
+            # Step 1: Checkout repository
+            - name: Checkout Repository
+              uses: actions/checkout@v4
 
-      # Step 2: Setup Python
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
+            # Step 2: Setup Python
+            - name: Setup Python
+              uses: actions/setup-python@v5
+              with:
+                  python-version: "3.11"
 
-      # Step 3: Install Dependencies
-      - name: Install Dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install mlflow==2.19.0 scikit-learn pandas numpy matplotlib seaborn joblib
+            # Step 3: Install Dependencies
+            - name: Install Dependencies
+              run: |
+                  python -m pip install --upgrade pip
+                  pip install mlflow==2.19.0 scikit-learn pandas numpy matplotlib seaborn joblib
 
-      # Step 4: Run MLflow Project
-      - name: Run MLflow Project
-        working-directory: MLProject
-        run: |
-          mlflow run . -P n_estimators=100 -P max_depth=10 -P test_size=0.2 --env-manager local
+            # Step 4: Run MLflow Project
+            - name: Run MLflow Project
+              working-directory: MLProject
+              run: |
+                  mlflow run . -P n_estimators=100 -P max_depth=10 -P test_size=0.2 --env-manager local
 
-      # Step 5: Upload Artifacts to GitHub (Skilled)
-      - name: Upload MLflow Artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: mlflow-artifacts
-          path: |
-            MLProject/mlruns/
-          retention-days: 30
+            # Step 5: Upload Artifacts to GitHub (Skilled)
+            - name: Upload MLflow Artifacts
+              uses: actions/upload-artifact@v4
+              with:
+                  name: mlflow-artifacts
+                  path: |
+                      MLProject/mlruns/
+                  retention-days: 30
 
-      # Step 6: Upload Model Artifacts
-      - name: Upload Model Files
-        uses: actions/upload-artifact@v4
-        with:
-          name: trained-model
-          path: |
-            MLProject/mlruns/**/artifacts/model/
-          retention-days: 30
+            # Step 6: Upload Model Artifacts
+            - name: Upload Model Files
+              uses: actions/upload-artifact@v4
+              with:
+                  name: trained-model
+                  path: |
+                      MLProject/mlruns/**/artifacts/model/
+                  retention-days: 30
