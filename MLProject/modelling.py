@@ -72,11 +72,17 @@ def load_and_prepare_data(data_dir: str = 'heart_disease_preprocessing', test_si
 def train_model(n_estimators: int = 100, max_depth: int = 10, test_size: float = 0.2):
     """Train model dan log ke MLflow."""
 
-    mlflow.set_experiment("heart-disease-ci")
-
     X_train, X_test, y_train, y_test = load_and_prepare_data(test_size=test_size)
 
-    with mlflow.start_run(run_name="ci_random_forest", nested=True):
+    # Use active run if running via mlflow project, otherwise create new
+    active_run = mlflow.active_run()
+    if active_run:
+        run_ctx = mlflow.start_run(run_id=active_run.info.run_id)
+    else:
+        mlflow.set_experiment("heart-disease-ci")
+        run_ctx = mlflow.start_run(run_name="ci_random_forest")
+
+    with run_ctx:
         # Train
         model = RandomForestClassifier(
             n_estimators=n_estimators,
