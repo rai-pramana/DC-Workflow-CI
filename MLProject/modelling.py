@@ -74,11 +74,14 @@ def train_model(n_estimators: int = 100, max_depth: int = 10, test_size: float =
 
     X_train, X_test, y_train, y_test = load_and_prepare_data(test_size=test_size)
 
-    # Use active run if running via mlflow project, otherwise create new
-    active_run = mlflow.active_run()
-    if active_run:
-        run_ctx = mlflow.start_run(run_id=active_run.info.run_id)
+    # Deteksi apakah running via 'mlflow run' (env var MLFLOW_RUN_ID di-set)
+    mlflow_run_id = os.environ.get('MLFLOW_RUN_ID')
+
+    if mlflow_run_id:
+        # Running via mlflow run - langsung log ke run yang sudah dibuat
+        run_ctx = mlflow.start_run(run_id=mlflow_run_id)
     else:
+        # Running standalone - buat experiment dan run baru
         mlflow.set_experiment("heart-disease-ci")
         run_ctx = mlflow.start_run(run_name="ci_random_forest")
 
