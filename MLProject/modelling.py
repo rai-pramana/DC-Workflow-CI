@@ -76,7 +76,7 @@ def train_model(n_estimators: int = 100, max_depth: int = 10, test_size: float =
 
     X_train, X_test, y_train, y_test = load_and_prepare_data(test_size=test_size)
 
-    with mlflow.start_run(run_name="ci_random_forest"):
+    with mlflow.start_run(run_name="ci_random_forest", nested=True):
         # Train
         model = RandomForestClassifier(
             n_estimators=n_estimators,
